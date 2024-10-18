@@ -36,6 +36,10 @@ func LoadQueries(driver string) (map[string]string, error) {
 	return queries, nil
 }
 
+func LoadMeIn() {
+	fmt.Println("Hello World!")
+}
+
 var SQL_FILES = map[string]string{
 	"godror":     "oracle.sql",
 	"postgresql": "postgres.sql",
