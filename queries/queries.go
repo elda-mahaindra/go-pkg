@@ -1,15 +1,25 @@
 package queries
 
 import (
-	"path/filepath"
+	"embed"
+	"fmt"
 
 	"github.com/qustavo/dotsql"
 )
 
+//go:embed oracle.sql postgres.sql
+var sqlFiles embed.FS
+
 func LoadQueries(driver string) (map[string]string, error) {
-	dot, err := dotsql.LoadFromFile(SQL_FILES[driver])
+	filename := SQL_FILES[driver]
+	sqlContent, err := sqlFiles.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read SQL file: %w", err)
+	}
+
+	dot, err := dotsql.LoadFromString(string(sqlContent))
+	if err != nil {
+		return nil, fmt.Errorf("failed to load SQL: %w", err)
 	}
 
 	queries := map[string]string{}
@@ -17,7 +27,7 @@ func LoadQueries(driver string) (map[string]string, error) {
 	for _, name := range QUERY_NAMES {
 		query, err := dot.Raw(name)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get query '%s': %w", name, err)
 		}
 
 		queries[name] = query
@@ -27,8 +37,8 @@ func LoadQueries(driver string) (map[string]string, error) {
 }
 
 var SQL_FILES = map[string]string{
-	"godror":     filepath.Join("queries", "oracle.sql"),
-	"postgresql": filepath.Join("queries", "postgres.sql"),
+	"godror":     "oracle.sql",
+	"postgresql": "postgres.sql",
 }
 
 const (
