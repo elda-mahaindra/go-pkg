@@ -3,6 +3,8 @@ package queries
 import (
 	"embed"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/qustavo/dotsql"
 )
@@ -10,6 +12,15 @@ import (
 //go:embed oracle.sql postgres.sql
 var sqlFiles embed.FS
 
+// LoadQueries reads the SQL file for the specified driver and loads all defined queries.
+// It returns a map of query names to their corresponding SQL strings.
+//
+// Parameters:
+//   - driver: A string specifying the database driver ("godror" for Oracle, "postgresql" for PostgreSQL)
+//
+// Returns:
+//   - A map[string]string where keys are query names and values are the SQL strings
+//   - An error if there was a problem reading the SQL file or parsing the queries
 func LoadQueries(driver string) (map[string]string, error) {
 	filename := SQL_FILES[driver]
 	sqlContent, err := sqlFiles.ReadFile(filename)
@@ -36,15 +47,25 @@ func LoadQueries(driver string) (map[string]string, error) {
 	return queries, nil
 }
 
-func LoadMeIn() {
-	fmt.Println("Hello World!")
+// GetRandomQueryName returns a random query name from the predefined list of query names.
+// This function can be used to select a random query for testing or demonstration purposes.
+//
+// Returns:
+//   - A string representing a randomly selected query name
+func GetRandomQueryName() string {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	return QUERY_NAMES[rand.Intn(len(QUERY_NAMES))]
 }
 
+// SQL_FILES maps database driver names to their corresponding SQL file names.
 var SQL_FILES = map[string]string{
 	"godror":     "oracle.sql",
 	"postgresql": "postgres.sql",
 }
 
+// Query name constants for various database operations.
+// These constants are used as keys to retrieve specific SQL queries
 const (
 	QUERY__GET_GL_LIST                   = "get-gl-list"
 	QUERY__GET_HIST_TRX_DETAIL_BY_UIDKEY = "get-hist-trx-detail-by-uidkey"
@@ -69,6 +90,9 @@ const (
 	QUERY__GET_TRANSAKSI_ID              = "get-transaksi-id"
 )
 
+// QUERY_NAMES is a slice containing all predefined query names.
+// This slice is used to iterate over all available queries when loading them,
+// and also serves as the source for the GetRandomQueryName function.
 var QUERY_NAMES = []string{
 	QUERY__GET_GL_LIST,
 	QUERY__GET_HIST_TRX_DETAIL_BY_UIDKEY,
