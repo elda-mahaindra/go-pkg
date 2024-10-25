@@ -1,4 +1,4 @@
-package main
+package package_query
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"gitlab.com/ihsansolusi/posindonesia/package-query/registration"
 )
 
-func main() {
+func Sample() {
 	queries, err := LoadQueries(DriverOracle, SvcFundTxBatch)
 	if err != nil {
 		log.Fatalf("failed to load queries: %s", err.Error())

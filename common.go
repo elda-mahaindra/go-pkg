@@ -1,4 +1,4 @@
-package main
+package package_query
 
 import "fmt"
 
