@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"gitlab.com/ihsansolusi/posindonesia/package-query/registration"
+	"github.com/elda-mahaindra/go-pkg/registration"
 )
 
 func Sample() {

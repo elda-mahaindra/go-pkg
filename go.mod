@@ -1,4 +1,4 @@
-module gitlab.com/ihsansolusi/posindonesia/package-query
+module github.com/elda-mahaindra/go-pkg
 
 go 1.23.0
 

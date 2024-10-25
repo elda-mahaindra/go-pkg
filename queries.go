@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/elda-mahaindra/go-pkg/registration"
 	"github.com/qustavo/dotsql"
-	"gitlab.com/ihsansolusi/posindonesia/package-query/registration"
 )
 
 //go:embed oracle.sql postgres.sql

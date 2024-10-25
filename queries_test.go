@@ -3,8 +3,8 @@ package package_query_test
 import (
 	"testing"
 
+	pquery "github.com/elda-mahaindra/go-pkg"
 	"github.com/stretchr/testify/require"
-	pquery "gitlab.com/ihsansolusi/posindonesia/package-query"
 )
 
 // ================================ tests ================================

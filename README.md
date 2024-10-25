@@ -17,7 +17,7 @@ This package serves as a repository for all SQL queries related to our core bank
 To use this package in your project, run:
 
 ```
-go get gitlab.com/ihsansolusi/posindonesia/package-query
+go get github.com/elda-mahaindra/go-pkg
 ```
 
 ## Usage
@@ -27,8 +27,8 @@ go get gitlab.com/ihsansolusi/posindonesia/package-query
 To load queries for a specific service and database driver:
 
 ```go
-import pquery "gitlab.com/ihsansolusi/posindonesia/package-query"
-import "gitlab.com/ihsansolusi/posindonesia/package-query/registration"
+import pquery "github.com/elda-mahaindra/go-pkg"
+import "github.com/elda-mahaindra/go-pkg/registration"
 
 queries, err := pquery.LoadQueries(pquery.DriverOracle, pquery.SvcFundTxBatch)
 if err != nil {
