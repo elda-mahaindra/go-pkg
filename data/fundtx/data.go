@@ -584,3 +584,8 @@ type GetDetailTrxUidRes struct {
 	NilaiEkuivalen      float64 `db:"NILAI_EKUIVALEN" json:"nilai_ekuivalen"`
 	KodeRC              string  `db:"KODE_RC" json:"kode_rc"`
 }
+
+type AccountingDayAvabilityRes struct {
+	Datevalue     string `db:"DATEVALUE"`
+	PeriodeStatus string `db:"PERIODE_STATUS"`
+}

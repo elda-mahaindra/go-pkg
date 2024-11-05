@@ -97,4 +97,7 @@ var QUERY_NAMES_FUNDTX = []string{
 	QUERY__GetHistTrxDetailByUidkey_main,
 	QUERY__GetHistTrxDetailByNoref_main,
 	QUERY__InsertTransaksiTransitKas_main,
+	QUERY__GetHistTrxListByNorek_main,
+	QUERY__GetRcCodeList_main,
+	QUERY__AccountingDayAvability_main,
 }
