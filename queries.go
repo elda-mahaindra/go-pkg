@@ -4,6 +4,8 @@ import (
 	"embed"
 	"fmt"
 	"math/rand"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/elda-mahaindra/go-pkg/registration"
@@ -52,7 +54,7 @@ func LoadQueries(driver DriverName, service ServiceName) (map[string]string, err
 			return nil, fmt.Errorf("failed to get query '%s': %w", name, err)
 		}
 
-		queries[name] = query
+		queries[name] = cleanQuery(query)
 	}
 
 	return queries, nil
@@ -96,4 +98,28 @@ func GetRandomQueryName() string {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	return registration.QUERY_NAMES_ALL[rand.Intn(len(registration.QUERY_NAMES_ALL))]
+}
+
+// cleanQuery sanitizes SQL queries by removing trailing semicolons and normalizing whitespace.
+// It helps prevent ORA-00911 errors when using the go-ora driver.
+//
+// The function performs the following operations:
+//   - Removes trailing semicolons
+//   - Compresses multiple whitespace characters into a single space
+//   - Trims leading and trailing whitespace
+//
+// Parameters:
+//   - query: The SQL query string to be cleaned
+//
+// Returns:
+//   - A cleaned version of the input query
+func cleanQuery(query string) string {
+	// Remove trailing semicolon
+	query = strings.TrimSuffix(query, ";")
+
+	// Optional: compress multiple spaces/newlines
+	space := regexp.MustCompile(`\s+`)
+	query = space.ReplaceAllString(query, " ")
+
+	return strings.TrimSpace(query)
 }
