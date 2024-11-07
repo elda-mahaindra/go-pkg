@@ -57,6 +57,8 @@ func LoadQueries(driver DriverName, service ServiceName) (map[string]string, err
 		queries[name] = cleanQuery(query)
 	}
 
+	fmt.Printf("successfully load queries using lib version '%s'", VERSION)
+
 	return queries, nil
 }
 
