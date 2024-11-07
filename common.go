@@ -2,7 +2,7 @@ package package_query
 
 import "fmt"
 
-const VERSION = "1.0.6"
+const VERSION = "1.0.7"
 
 type DriverName string
 type ServiceName string

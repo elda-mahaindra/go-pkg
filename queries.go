@@ -54,7 +54,7 @@ func LoadQueries(driver DriverName, service ServiceName) (map[string]string, err
 			return nil, fmt.Errorf("failed to get query '%s': %w", name, err)
 		}
 
-		queries[name] = cleanQuery(query)
+		queries[name] = query
 	}
 
 	fmt.Printf("successfully load queries using lib version '%s'", VERSION)
@@ -102,7 +102,7 @@ func GetRandomQueryName() string {
 	return registration.QUERY_NAMES_ALL[rand.Intn(len(registration.QUERY_NAMES_ALL))]
 }
 
-// cleanQuery sanitizes SQL queries by removing trailing semicolons and normalizing whitespace.
+// CleanQuery sanitizes SQL queries by removing trailing semicolons and normalizing whitespace.
 // It helps prevent ORA-00911 errors when using the go-ora driver.
 //
 // The function performs the following operations:
@@ -115,7 +115,7 @@ func GetRandomQueryName() string {
 //
 // Returns:
 //   - A cleaned version of the input query
-func cleanQuery(query string) string {
+func CleanQuery(query string) string {
 	// Remove trailing semicolon
 	query = strings.TrimSuffix(query, ";")
 
