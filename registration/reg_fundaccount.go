@@ -138,4 +138,6 @@ var QUERY_NAMES_FUNDACCOUNT = []string{
 	QUERY__UpdateNilaiEkuivalen_main,
 	QUERY__InsertTransaksiTransitKas_main,
 	QUERY__GetAccount_main,
+	QUERY__GetListRas_main,
+	QUERY__GetDetailTrxDetail_main,
 }
