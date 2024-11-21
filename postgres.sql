@@ -2200,7 +2200,7 @@ select t.id_transaksi, to_char(t.tanggal_transaksi, 'YYYY-MM-DD') as tanggal_tra
 		from %v.transaksi t
 		%v
 		order by t.jam_input
-		offset :bw1 rows fetch next :bw2 rows only
+		offset %d rows fetch next %d rows only
 
 -- name: GetTrxByNoref-main
 select t.id_transaksi ,t.nomor_referensi
