@@ -189,7 +189,7 @@ insert into %[1]s.recurrenttransaction
 		values 
 		(:ID_REGISTER, :DESCRIPTION, :RECID, :NOMOR_REKENING_KREDIT )
 
- -- name: UpdateRegLayIsPassT-mainf
+ -- name: UpdateRegLayIsPassT-main
  UPDATE %s.registerlayanan SET
 			NOMOR_REKENING_LAYANAN = :NOMOR_REKENING_LAYANAN,
 			STATUS_REGISTER_LAYANAN = :STATUS_REGISTER_LAYANAN,
