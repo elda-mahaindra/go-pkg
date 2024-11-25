@@ -1232,7 +1232,7 @@ select b.id_bukuwarkat, n.nomor_seri, n.status_warkat, n.jenis_warkat,
 			left join %[1]s.produk p on p.kode_produk = rl.kode_produk
 			left join %[2]s.cabang c on rt.kode_cabang = c.kode_cabang
 			left join %[1]s.enum_varchar ev on ev.enum_name ='eStatusWarkat' and ev.enum_value = n.status_warkat 
-		where n.nomor_seri = :nomor_seri
+		where n.nomor_seri = $1
 
 -- name: PostChqBook-main
 insert into %s.bukuwarkat
