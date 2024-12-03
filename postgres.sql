@@ -167,10 +167,10 @@ update %s.individu
 		where id_individu = :ID_INDIVIDU
 
 -- name: GetIDStandingInstruction-main
-select  nextval('%[1]s.seq_standinginstruction') as id 
+select nextval('%[1]s.seq_standinginstruction') as id 
 
 -- name: GetIDRecurrentTransaction-main
-select  nextval('%[1]s.seq_recurrenttransaction') as id 
+select nextval('%[1]s.seq_recurrenttransaction') as id 
 
 -- name: CreateRecurrenttrx-main
 insert into %[1]s.recurrenttransaction
@@ -788,7 +788,7 @@ select to_char(min(datevalue), 'yyyy-mm-dd') as next_work_date
 -- name: AccountingDayAvability-main
 select datevalue, periode_status 
 		from %[1]s.accountingday accd
-		where accd.datevalue = to_date(:datevalue, 'YYYY-MM-DD')
+		where accd.datevalue = to_date($1, 'YYYY-MM-DD')
 
 -- name: ValidasiRekKasTrx-main
 select rt.nomor_rekening, rt.nama_rekening, rt.kode_valuta, rt.kode_cabang, rt.saldo, a.accountinstance_id, rt.kode_account, rt.saldo as saldo_efektif,
@@ -875,8 +875,8 @@ insert into %s.alamatalternatif
 		(alamat_jalan, alamat_rtrw, alamat_kelurahan, alamat_provinsi, 
 			alamat_kode_pos, nomor_rekening, alamat_kecamatan, alamat_kota_kabupaten, telepon, inputer, tgl_input, status) 
 		values 
-		(:ALAMAT_JALAN, :ALAMAT_RTRW, :ALAMAT_KELURAHAN, :ALAMAT_PROVINSI, 
-			:ALAMAT_KODE_POS, :NOMOR_REKENING, :ALAMAT_KECAMATAN, :ALAMAT_KOTA_KABUPATEN, :TELEPON, :INPUTER, current_timestamp, :STATUS)
+		($1, $2, $3, $4, 
+			$5, $6, $7, $8, $9, $10, current_timestamp, $11)
 
 -- name: DeleteAlamatAlernatif-main
 delete from %s.alamatalternatif 
@@ -2152,7 +2152,7 @@ select n.nomor_nasabah ,n.nama_nasabah,
 			left join %[1]s.nasabahindividu ni on ni.nomor_nasabah = n.nomor_nasabah 
 			left join %[1]s.individu i on i.id_individu = ni.id_individu 
 			left join %[1]s.nasabahkorporat nk on nk.nomor_nasabah = n.nomor_nasabah
-		where nomor_rekening = :nomor_rekening
+		where nomor_rekening = $1
 		order by n.nomor_nasabah 
 
 -- name: GetBagiHasil-main
@@ -2427,7 +2427,7 @@ select id_transaksi, nomor_rekening_debet, nomor_rekening_kredit, nama_rekening_
 			nomor_nasabah_wic, id_notadebitoutwardgroup, nominal_tunai_fisik, is_tunai_fisik, id_sumber_dana_trx, id_tujuan_trx, kd_sumber_dana_trx, 
 			kd_tujuan_trx, ket_sumber_dana_trx, ket_tujuan_trx, tipe_akses_transaksi, listnama_akses_transaksi 
 		from %[1]s.infotransaksi i
-		where id_transaksi = :id_transaksi
+		where id_transaksi = $1
 
 -- name: InsertListAksesTransaksi-main
 insert into %[1]s.listaksestransaksi
@@ -3342,15 +3342,15 @@ where agentcode = :agentcode
 select uidkey ,to_char(tanggal_input, 'yyyy-mm-dd') as tanggal_input ,action_type ,user_input ,user_otor, keterangan ,info1 ,info2 
     ,kode_cabang, keyint, 'T' as is_exists, is_reversed
 from %[1]s.infouid i 
-where uidkey = :uidkey
-    and action_type = :action_type
+where uidkey = $1
+    and action_type = $2
 
 -- name: GetInfoUidForRev-main
 select uidkey ,to_char(tanggal_input, 'yyyy-mm-dd') as tanggal_input ,action_type ,user_input ,user_otor, keterangan ,info1 ,info2 
     ,kode_cabang, keyint, 'T' as is_exists, is_reversed
 from %[1]s.infouid i 
-where uidkey = :uidkey
-    and action_type = :action_type
+where uidkey = $1
+    and action_type = $2
 
 -- name: InsertInfoUid-main
 insert into %[1]s.infouid 
@@ -3400,10 +3400,10 @@ where rc.nomor_nasabah = :NOMOR_NASABAH
 order by rt.status_rekening ,rt.nomor_rekening
 
 -- name: GetIDIdv-main
-select  nextval('%[1]s.seq_individu') as id_idv 
+select nextval('%[1]s.seq_individu') as id_idv 
 
 -- name: GetIDRegLayanan-main
-select  nextval('%[1]s.seq_registerlayanan') as id 
+select nextval('%[1]s.seq_registerlayanan') as id 
 
 -- name: GetListParameterBiaya-main
 select kode_akun_ssl as account_code ,nominal_biaya
@@ -3606,16 +3606,12 @@ insert into %[1]s.individu
     kewarganegaraan, alamat_rumah_kota_kabupaten, jenis_identitas, alamat_rumah_jalan, 
     alamat_rumah_kelurahan, status_pep, jenis_kelamin, kode_negara_asal)
 values 
-(:ALAMAT_RUMAH_RT, :ALAMAT_RUMAH_PROVINSI, :KODE_PEKERJAAN, :JENIS_IDENTITAS_LAIN, :NAMA_LENGKAP,
-    :TEMPAT_LAHIR, :STATUS_PERKAWINAN, :NOMOR_IDENTITAS, :NOMOR_IDENTITAS_LAIN, :ALAMAT_RUMAH_RW, 
-    :ALAMAT_RUMAH_KECAMATAN, :ALAMAT_RUMAH_KODE_POS, :TELEPON_HP_NOMOR, :ID_INDIVIDU, :TANGGAL_LAHIR, 
-    :KEWARGANEGARAAN, :ALAMAT_RUMAH_KOTA_KABUPATEN, :JENIS_IDENTITAS, :ALAMAT_RUMAH_JALAN, 
-    :ALAMAT_RUMAH_KELURAHAN, :STATUS_PEP, :JENIS_KELAMIN, :KODE_NEGARA_ASAL)
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
     
 -- name: GetInfoTTRByIdTrx-main
 select nomor_rekening, id_transaksi, to_char(tanggal_proses, 'yyyy-mm-dd') as tanggal_proses, nilai_transaksi, keterangan, user_otorisasi, userotorisasi, userinput
 from %[1]s.infopenutupanrekening
-where id_transaksi = :id_transaksi
+where id_transaksi = $1
 
 -- name: DelInfoTTR-main
 delete from %[1]s.infopenutupanrekening
@@ -3658,10 +3654,16 @@ where %[2]s
         or dt.kode_cabang is null
         or dt.kode_valuta is null
         or (
-            dt.kode_valuta = :DEFAULT_VALUTA
+            dt.kode_valuta = $1
             and (dt.nilai_kurs_manual <= 0 or dt.nilai_kurs_manual is null)
         )
     )
+
+-- name: CheckValiditasDataJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = $2
+
+-- name: CheckValiditasDataJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: CheckAccountInstanceJournal-main
 select dt.id_detil_transaksi, dt.id_transaksi, dt.nomor_rekening, dt.kode_account, dt.kode_cabang, dt.kode_valuta
@@ -3676,6 +3678,12 @@ and not exists (
         and ai.branch_code = dt.kode_cabang
         and ai.currency_code = dt.kode_valuta
 )
+
+-- name: CheckAccountInstanceJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = $1
+
+-- name: CheckAccountInstanceJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: CheckBalanceJournal-main
 select id_transaksi, kode_valuta 
@@ -3702,6 +3710,12 @@ from (
     group by dt.id_transaksi, dt.kode_valuta
 )
 where abs(amount_debit - amount_credit) > 0.001
+
+-- name: CheckBalanceJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = $1
+
+-- name: CheckBalanceJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: MergeJournalNumber-main
 update %[1]s.pendingtransactionjournal target
@@ -3758,8 +3772,8 @@ insert into %[1]s.journalitem (
     subaccountcode, subaccountname
 )
 select 
-    ubitems.fl_journal,  nextval('%[1]s.seq_journalitem'), :ACC_CODE_RAK1, ubitems.amount_credit, ubitems.amount_debit, 'BALANCING RAK OTOMATIS', ubitems.branch_code, ubitems.valuta_code, null, 
-    t.user_input, t.user_input, t.user_input, t.tanggal_input, t.tanggal_input, 'N', null, 1, ai.accountinstance_id, :ACC_CODE_RAK2||'-'||ubitems.branch_code||'-'||ubitems.valuta_code, :NAMA_RAK
+    ubitems.fl_journal,  nextval('%[1]s.seq_journalitem'), $1, ubitems.amount_credit, ubitems.amount_debit, 'BALANCING RAK OTOMATIS', ubitems.branch_code, ubitems.valuta_code, null, 
+    t.user_input, t.user_input, t.user_input, t.tanggal_input, t.tanggal_input, 'N', null, 1, ai.accountinstance_id, $2 || '-' ||ubitems.branch_code||'-'||ubitems.valuta_code, $3
 FROM 
 (
     select ptj.id_transaksi, ji.fl_journal, ji.valuta_code, ji.branch_code, sum(amount_debit) as amount_debit, sum(amount_credit) as amount_credit
@@ -3773,7 +3787,13 @@ FROM
     inner join %[1]s.transaksi t on ubitems.id_transaksi = t.id_transaksi
     inner join %[1]s.accountinstance ai on (ai.branch_code = ubitems.branch_code and ai.currency_code = ubitems.valuta_code)
 where abs(ubitems.amount_debit - ubitems.amount_credit) > 0.001
-    and ai.account_code = :ACC_CODE_RAK3 
+    and ai.account_code = $4 
+
+-- name: BalancingRAKOtomatisJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = $5
+
+-- name: BalancingRAKOtomatisJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: UpdateTrxStatusJournal-main
 update %[1]s.transaksi t
@@ -4112,13 +4132,13 @@ select nama_layanan, deskripsi, jenis_layanan, id_layanan, periode_proses_layana
     nomor_rekening_biaya, jarak_periode_proses, status_biaya_proses, status_data, tag_layanan, biaya_layanan, id_event, user_pembuat, 
     user_pengubah 
 from %s.layanan l 
-where nama_layanan = :nama_layanan
+where nama_layanan = $1
 
 -- name: CreateListIndRekening-main
 insert into %[1]s.listindividurekening
 (id_individu, nomor_rekening, keterangan, is_aktif, kode_sumber_dana)
 values 
-(:ID_INDIVIDU, :NOMOR_REKENING, :KETERANGAN, :IS_AKTIF, :KODE_SUMBER_DANA)
+($1, $2, $3, $4, $5)
 
 -- name: UpdateListIndividuRekByIDIndividu-main
 update %[1]s.listindividurekening
@@ -4155,7 +4175,7 @@ values(:NOMOR_REKENING, :KODE_CABANG, :SEQUENCE_NO, :STATUS)
 insert into %[1]s.multiciflink
 (LINKID, NOMOR_REKENING, NOMOR_NASABAH)
 values
-( nextval('%[1]s.seq_multiciflink'), :NOMOR_REKENING, :NOMOR_NASABAH)
+( nextval('%[1]s.seq_multiciflink'), $1, $2)
 
 -- name: DeleteMultiCIFLink-main
 delete from %s.multiciflink
@@ -4286,7 +4306,7 @@ where nomor_rekening = :NOMOR_REKENING
 -- name: GetLimitDebetHarian-main
 select sum(nilai_transaksi) as total_nilai_transaksi
 from %[1]s.limittransaksirekening lt
-where nomor_rekening = :NOMOR_REKENING 
+where nomor_rekening = $1
     and periode = 'H' 
     and jenis_mutasi = 'D'
 
@@ -4334,7 +4354,7 @@ where rt.nomor_rekening = :nomor_rekening
 -- name: CekNomorRegisterBuku-main
 select nomor_register_buku, nomor_rekening 
 from %[1]v.registerbukutabungan r 
-where nomor_register_buku = :nomor_register_buku 
+where nomor_register_buku = $1 
 
 -- name: GetAlternateAddress-main
 select nomor_rekening, alamat_jalan, alamat_kecamatan, alamat_rtrw, alamat_kelurahan, alamat_provinsi, alamat_kode_pos, alamat_kota_kabupaten
@@ -4488,7 +4508,7 @@ values
 -- name: GetjenisPasbook-main
 select jp.total_baris, jp.jumlah_halaman 
 from %[1]s.jenispassbook jp 
-where jp.kode_passbook = :kode_passbook
+where jp.kode_passbook = $1
 
 -- name: GetDicMapCodeTrx-main
 select m.kode_transaksi, k.kode_trans_passbook 
@@ -5221,7 +5241,7 @@ select p.kode_produk,
 from %s.coreproduct c
     inner join %s.produk p on p.kode_produk = c.productcode
     inner join %s.produkcabang pc on pc.kode_produk = p.kode_produk
-where c.status = 'A' and p.jenis_produk='T' and pc.kode_cabang = :kode_cabang
+where c.status = 'A' and p.jenis_produk='T' and pc.kode_cabang = $1
 order by p.kode_produk
 
 -- name: GetProdDepList-main
@@ -5491,7 +5511,7 @@ WHERE NOMOR_REKENING = :nomor_rekening
 
 -- name: GetJangkaWaktuRencana-main
 select 
-    to_char(add_months(nilai_parameter_tanggal, :jangka_waktu), 'YYYY-MM-DD') as jw_date,
+    to_char(add_months(nilai_parameter_tanggal, $1), 'YYYY-MM-DD') as jw_date,
     to_char(add_months(nilai_parameter_tanggal, 1), 'YYYY-MM-DD') as next_month_date
 from %[1]s.parameterglobal
 where kode_parameter = 'POD'
@@ -9031,7 +9051,7 @@ from %[1]s.custaccountimage
 where accountno = :NOMOR_REKENING
 
 -- name: CheckSpecimentAcctList-main
-SELECT accountno FROM %[1]s.custaccountimagedesc WHERE accountno = :NOMOR_REKENING 
+SELECT accountno FROM %[1]s.custaccountimagedesc WHERE accountno = $1
 
 -- name: UpdateSpecimentAcctList-main
 UPDATE %[1]s.custaccountimagedesc

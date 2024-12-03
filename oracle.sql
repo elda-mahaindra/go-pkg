@@ -3664,6 +3664,12 @@ where %[2]s
         )
     )
 
+-- name: CheckValiditasDataJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: CheckValiditasDataJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
+
 -- name: CheckAccountInstanceJournal-main
 select dt.id_detil_transaksi, dt.id_transaksi, dt.nomor_rekening, dt.kode_account, dt.kode_cabang, dt.kode_valuta
 from %[1]s.detiltransaksi dt
@@ -3677,6 +3683,12 @@ and not exists (
         and ai.branch_code = dt.kode_cabang
         and ai.currency_code = dt.kode_valuta
 )
+
+-- name: CheckAccountInstanceJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: CheckAccountInstanceJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: CheckBalanceJournal-main
 select id_transaksi, kode_valuta 
@@ -3703,6 +3715,12 @@ from (
     group by dt.id_transaksi, dt.kode_valuta
 )
 where abs(amount_debit - amount_credit) > 0.001
+
+-- name: CheckBalanceJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: CheckBalanceJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: MergeJournalNumber-main
 merge into %[1]s.pendingtransactionjournal target
@@ -3775,6 +3793,12 @@ FROM
     inner join %[1]s.accountinstance ai on (ai.branch_code = ubitems.branch_code and ai.currency_code = ubitems.valuta_code)
 where abs(ubitems.amount_debit - ubitems.amount_credit) > 0.001
     and ai.account_code = :ACC_CODE_RAK3 
+
+-- name: BalancingRAKOtomatisJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: BalancingRAKOtomatisJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: UpdateTrxStatusJournal-main
 merge into %[1]s.transaksi t
