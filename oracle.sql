@@ -1046,6 +1046,9 @@ select
 		where h.nomor_rekening = :NOMOR_REKENING
 		order by tanggal_hold desc 
 
+-- name: GetListHoldDana-filter-Status
+and h.status = :STATUS
+
 -- name: GetHoldDanaFinFund-main
 SELECT * FROM %s.holddanarekening
 		WHERE nomor_referensi = :nomor_referensi
@@ -1647,6 +1650,44 @@ select m.no_nasabah as nomor_nasabah,
 		order by m.nama_nasabah, m.tgl_lahir, d.no_dhn desc
 		offset :offset rows fetch next :limit rows only
 
+-- name: GetListDHN-filter-Default
+rownum < 30
+
+-- name: GetListDHN-filter-Branch
+and n.kode_cabang_input = :branch_code
+
+-- name: GetListDHN-filter-Nasabah
+and upper(m.nama_nasabah) LIKE :nama_nasabah
+
+-- name: GetListDHN-filter-TanggalLahir
+and to_date(to_char(m.tgl_lahir, 'yyyy-mm-dd'), 'yyyy-mm-dd') = to_date(:tanggal_lahir, 'yyyy-mm-dd')
+
+-- name: GetListDHN-filter-DHNExpiredTrue
+and to_date(to_char(d.batas_sanksi, 'yyyy-mm-dd'), 'yyyy-mm-dd') < to_date(:dhn_expired, 'yyyy-mm-dd')
+
+-- name: GetListDHN-filter-DHNExpiredFalse
+and to_date(to_char(d.batas_sanksi, 'yyyy-mm-dd'), 'yyyy-mm-dd') >= to_date(:dhn_expired, 'yyyy-mm-dd')
+
+-- name: GetListDHN-filter-Npwp
+and upper(m.nomor_npwp) = :nomor_npwp
+
+-- name: GetListDHN-filter-StatusCif
+and upper(m.status_cif) = :status_cif
+
+-- name: GetListDHN-filter-Keyword
+and (upper(m.no_nasabah) like :keyword1
+	or upper(m.nama_nasabah) like :keyword2
+	or upper(m.nomor_identitas) like :keyword3
+	or upper(m.nomor_npwp) like :keyword4
+	or upper(m.gelar) like :keyword5
+	or upper(d.no_dhn) like :keyword6)
+
+-- name: GetListDHN-filter-IsDHIB
+and upper(m.is_dhib) = :is_dhib
+
+-- name: GetListDHN-filter-IsDHN
+and upper(m.is_dhn) = :is_dhn
+
 -- name: GetDetilDHIBData-main
 select d.id_dhn ,d.no_nasabah ,d.nama_nasabah ,d.jenis_nasabah ,d.nomor_identitas ,to_char(d.tgl_lahir, 'yyyy-mm-dd') as tgl_lahir ,d.no_nasabah ,d.gelar 
 			,d.is_bbl ,d.alamat_jalan ,d.alamat_rt ,d.alamat_rw ,d.alamat_kelurahan ,d.alamat_kecamatan ,d.alamat_kota_kabupaten ,d.alamat_provinsi ,d.alamat_kode_pos 
@@ -2061,6 +2102,56 @@ SELECT
 		and t.kode_jenis in ('SAV', 'CA') 
 		%[2]s
 	OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
+
+-- name: GetListTabGiro-filter-KodeCabang
+AND UPPER(t.kode_cabang) = :kode_cabang
+
+-- name: GetListTabGiro-filter-JenisRekeningLiabilitas
+and l.jenis_rekening_liabilitas = :jenis_rekening_liabilitas
+
+-- name: GetListTabGiro-filter-StatusRekening
+and t.status_rekening = :status_rekening
+
+-- name: GetListTabGiro-filter-NomorNasabah
+AND UPPER(n.nomor_nasabah) = :nomor_nasabah
+
+-- name: GetListTabGiro-filter-NomorRekening
+AND upper(t.nomor_rekening) like :nomor_rekening
+
+-- name: GetListTabGiro-filter-JenisNasabah
+AND UPPER(n.jenis_nasabah_kode) = :jenis_nasabah
+
+-- name: GetListTabGiro-filter-Npwp
+AND (UPPER(n.nomor_npwp_ori) LIKE :npwp1
+	OR UPPER(n.nomor_npwp_plain) LIKE :npwp2)
+
+-- name: GetListTabGiro-filter-NomorIdentitas
+AND UPPER(n.nomor_identitas) LIKE :no_identitas
+
+-- name: GetListTabGiro-filter-NamaNasabah
+AND UPPER(n.nama_lengkap) LIKE :nama_nasabah
+
+-- name: GetListTabGiro-filter-LandPhone
+AND (
+	UPPER(n.telepon1) LIKE :land_phone1
+	OR UPPER(n.telepon2) LIKE :land_phone2
+	OR UPPER(n.telepon3) LIKE :land_phone3
+)
+
+-- name: GetListTabGiro-filter-Handphone
+AND UPPER(n.handphone) LIKE :hand_phone
+
+-- name: GetListTabGiro-filter-TanggalLahir
+AND TO_DATE(TO_CHAR(n.tgl_lahir, '%[1]s'), '%[1]s') = TO_DATE(:tgl_lahir, '%[1]s')
+
+-- name: GetListTabGiro-filter-IbuKandung
+AND UPPER(n.nama_ibu_kandung) LIKE :ibu_kandung
+
+-- name: GetListTabGiro-filter-Address
+AND UPPER(n.alamat) LIKE :address
+
+-- name: GetListTabGiro-filter-Keyword
+and ((upper(t.nama_rekening) like :keyword1 or upper(t.nomor_rekening) like :keyword2))
 
 -- name: GetRekeningTabgirDetail-main
 select rl.nomor_nasabah, n.jenis_nasabah, rl.nomor_rekening, rt.nama_rekening, rt.saldo, rt.kode_cabang, c.nama_cabang,
@@ -5011,6 +5102,9 @@ where rl.jenis_rekening_liabilitas = :jenis_rekening_liabilitas
     %[3]s
 order by r.nomor_rekening 
 offset :offset rows fetch next :limit rows only
+
+-- name: GetListRas-filter-KodeCabang
+and r.kode_cabang = :kode_cabang
 
 -- name: NonactiveRecurrenttrx-main
 update  %[1]s.recurrenttransaction 
