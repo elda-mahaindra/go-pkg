@@ -66,6 +66,9 @@ select
 		and ( db.project_no = '0000' or ( db.project_no <> '0000' and db.balance <> 0.0) )           
 		order by account_code
 
+-- name: GetListLabaRugi-filter-CompanyCode
+and ac.company_code = :company_code
+
 -- name: GetListNeraca-subQueryDailyBalanceFirstDate
 SELECT
 			ai.accountinstance_id, '%[2]s' as p_date,
@@ -154,7 +157,7 @@ select
 		order by pg.accountgroup_code, pg.accountgroup_name
 
 -- name: UpdateDataIndividuHAR-main
-update %s.individu 
+update %[1]s.individu 
 		set nama_lengkap = :NAMA_LENGKAP, tempat_lahir = :TEMPAT_LAHIR, tanggal_lahir = :TANGGAL_LAHIR, 
 			status_perkawinan = :STATUS_PERKAWINAN, kewarganegaraan = :KEWARGANEGARAAN, jenis_identitas = :JENIS_IDENTITAS, 
 			nomor_identitas = :NOMOR_IDENTITAS, alamat_rumah_jalan = :ALAMAT_RUMAH_JALAN, alamat_rumah_rt = :ALAMAT_RUMAH_RT, 
@@ -190,7 +193,7 @@ insert into %[1]s.recurrenttransaction
 		(:ID_REGISTER, :DESCRIPTION, :RECID, :NOMOR_REKENING_KREDIT )
 
  -- name: UpdateRegLayIsPassT-main
- UPDATE %s.registerlayanan SET
+ UPDATE %[1]s.registerlayanan SET
 			NOMOR_REKENING_LAYANAN = :NOMOR_REKENING_LAYANAN,
 			STATUS_REGISTER_LAYANAN = :STATUS_REGISTER_LAYANAN,
 			JENIS_REGISTER_LAYANAN = :JENIS_REGISTER_LAYANAN,
@@ -198,7 +201,7 @@ insert into %[1]s.recurrenttransaction
 		WHERE id_register = :ID_REGISTER
 
 -- name: DeleteListIndividu-main
-DELETE FROM %s.listindividurekening
+DELETE FROM %[1]s.listindividurekening
 		WHERE nomor_rekening = :nomor_rekening
 
 -- name: UpdateRegPassbook-main
@@ -233,12 +236,12 @@ select rl.nomor_rekening ,rt.nama_rekening ,rt.keterangan ,rl.nomor_nasabah ,n.j
 
 -- name: GetValidasiRekeningRT-main
 select rrt.nomor_rekening_kredit ,rl.status_register_layanan
-		from %s.registerrt rrt
+		from %[1]s.registerrt rrt
 	 	inner join %[1]s.registerlayanan rl on rl.id_register = rrt.id_register
 		where nomor_rekening_kredit = :nomor_rekening
 
 -- name: GetListRencanaLayanan-main
-select id_layanan from %s.listrencanalayanan
+select id_layanan from %[1]s.listrencanalayanan
 		where id_layanan = :id_layanan and kode_produk = :kode_produk
 
 -- name: GetAccountForclose-main
@@ -351,6 +354,12 @@ select a.id_group ,
 			and a.Status_NotaDebit = 'T' 
 			%[2]s              			            
 		order by a.Tanggal_Efektif
+
+-- name: GetPendingClrDepositList-filter-KodeCabang
+and a.Kode_Cabang = :kode_cabang
+
+-- name: GetPendingClrDepositList-filter-Tanggal
+and a.Tanggal_Efektif = to_date(:tanggal_efektif, 'yyyy-mm-dd')
 
 -- name: GetAcctSavplanCertificate-main
 SELECT 
@@ -871,7 +880,7 @@ select nomor_rekening ,status_blokir ,sistem_pemblokir ,user_input ,to_char(tang
 			and nomor_rekening = :nomor_rekening
 
 -- name: CreateAlamatAlernatif-main
-insert into %s.alamatalternatif
+insert into %[1]s.alamatalternatif
 		(alamat_jalan, alamat_rtrw, alamat_kelurahan, alamat_provinsi, 
 			alamat_kode_pos, nomor_rekening, alamat_kecamatan, alamat_kota_kabupaten, telepon, inputer, tgl_input, status) 
 		values 
@@ -879,11 +888,11 @@ insert into %s.alamatalternatif
 			:ALAMAT_KODE_POS, :NOMOR_REKENING, :ALAMAT_KECAMATAN, :ALAMAT_KOTA_KABUPATEN, :TELEPON, :INPUTER, current_timestamp, :STATUS)
 
 -- name: DeleteAlamatAlernatif-main
-delete from %s.alamatalternatif 
+delete from %[1]s.alamatalternatif 
 		where nomor_rekening = :nomor_rekening
 
 -- name: UpdateAlamatAlernatif-main
-update %s.alamatalternatif 
+update %[1]s.alamatalternatif 
 		set telepon = :TELEPON, alamat_jalan = :ALAMAT_JALAN, 
 			alamat_rtrw = :ALAMAT_RTRW, alamat_kelurahan = :ALAMAT_KELURAHAN, alamat_kecamatan = :ALAMAT_KECAMATAN,
 			alamat_kota_kabupaten = :ALAMAT_KOTA_KABUPATEN, alamat_provinsi = :ALAMAT_PROVINSI, 
@@ -928,7 +937,7 @@ select rl.id_register ,to_char(rl.tanggal_registrasi, 'yyyy-mm-dd') as tgl_regis
 			and rl.jenis_register_layanan = :jenis_register_layanan
 
 -- name: CreateRegAutosave-main
-insert into %s.registerautosweep 
+insert into %[1]s.registerautosweep 
 		(id_register, instructionid, instructionid_swap, saldo_minimal, saldo_maksimal, cek_saldo_minimal, 
 			cek_saldo_maksimal, nomor_rekening_tujuan) 
 		values 
@@ -941,6 +950,15 @@ select m.kode_member ,nama_member ,nama_singkat, status_peserta_rtgs ,status_pes
 			inner join %[1]s.memberrtgsaccount ma on m.kode_member = ma.kode_member
 		where %[2]s
 		order by nama_member
+
+-- name: GetKodeBankTrfList-filter-Default
+m.status = 'A' and ma.currency_code = 'IDR'
+
+-- name: GetKodeBankTrfList-filter-JenisMemberSKN
+and m.status_peserta_skn = :status_peserta
+
+-- name: GetKodeBankTrfList-filter-JenisMemberRTGS
+and m.status_peserta_rtgs = :status_peserta
 
 -- name: GetKliringKotaList-main
 select sandi_kota, sandi_propinsi, nama_kota, keterangan
@@ -1050,7 +1068,7 @@ select
 and h.status = :STATUS
 
 -- name: GetHoldDanaFinFund-main
-SELECT * FROM %s.holddanarekening
+SELECT * FROM %[1]s.holddanarekening
 		WHERE nomor_referensi = :nomor_referensi
 		AND STATUS = 'A'
 
@@ -1065,7 +1083,7 @@ UPDATE %[1]s.holddanarekening
 			NOMOR_REFERENSI =  :NOMOR_REFERENSI
 
 -- name: UpdateHoldDanaNonaktifFinFund-main
-UPDATE %s.holddanarekening
+UPDATE %[1]s.holddanarekening
 		SET 
 			TANGGAL_NON_AKTIF = :ACCDAY
 			, Status = 'N'
@@ -1075,22 +1093,22 @@ UPDATE %s.holddanarekening
 -- name: GetBukuWarkat-main
 select nomor_seri_awal, nomor_seri_akhir, lembar_terpakai, lembar_tersedia, id_bukuwarkat, jenis_warkat, is_otorisasi, tanggal_otorisasi, 
 			user_otorisasi, user_input, nomor_rekening, status_buku, tanggal_input, tanggal_aktivasi, user_otorisasi_aktivasi, tanggal_otorisasi_aktivasi, user_aktivasi 
-		from %s.bukuwarkat
+		from %[1]s.bukuwarkat
 		where id_bukuwarkat = :id_bukuwarkat
 
 -- name: UpdateAktivasiWarkat-main
-update %s.bukuwarkat
+update %[1]s.bukuwarkat
 		set user_aktivasi = :USER_AKTIVASI, user_otorisasi_aktivasi = :USER_OTORISASI_AKTIVASI,
 			status_buku = :STATUS_BUKU, tanggal_aktivasi = current_timestamp, tanggal_otorisasi_aktivasi = current_timestamp
 		where id_bukuwarkat = :ID_BUKUWARKAT
 
 -- name: UpdateLembarTerpakaiCair-main
-update %s.bukuwarkat
+update %[1]s.bukuwarkat
 		set lembar_terpakai = lembar_terpakai + 1
 		where id_bukuwarkat = :id_bukuwarkat
 
 -- name: UpdateLembarTerpakaiCairReverse-main
-update %s.bukuwarkat
+update %[1]s.bukuwarkat
 		set lembar_terpakai = lembar_terpakai - 1
 		where id_bukuwarkat = :id_bukuwarkat
 
@@ -1129,7 +1147,7 @@ select cardid ,cardno ,branchcode ,customerno ,customername ,savingaccountno ,cu
 			or currentaccountno = :currentaccountno
 
 -- name: GetIdRequest-main
-select %s.seq_cardcustomerrequest.nextval as id_request from dual
+select %[1]s.seq_cardcustomerrequest.nextval as id_request from dual
 
 -- name: InsertCardCustomerRequest-main
 insert into %[1]s.cardcustomerrequest
@@ -1169,12 +1187,12 @@ insert into %[1]s.cardblockrequest
 
 -- name: ValidasiPostChq-main
 select b.jenis_warkat ,b.nomor_seri_awal ,b.nomor_rekening ,b.status_buku 
-		from %s.bukuwarkat b
+		from %[1]s.bukuwarkat b
 		where b.jenis_warkat = :jenis_warkat
 			and b.nomor_seri_awal = :nomor_seri_awal
 
 -- name: GetChequeID-main
-select %s.seq_bukuwarkat.nextval as id_bukuwarkat from dual
+select %[1]s.seq_bukuwarkat.nextval as id_bukuwarkat from dual
 
 -- name: GetChequeList-main
 select b.id_bukuwarkat, b.nomor_rekening,
@@ -1193,6 +1211,16 @@ select b.id_bukuwarkat, b.nomor_rekening,
         from %[1]s.bukuwarkat b 
 		%[2]s
         order by b.id_bukuwarkat desc
+
+-- name: GetChequeList-filter-Default
+where nomor_rekening = :nomor_rekening
+
+-- name: GetChequeList-filter-Keyword
+and (upper(b.nomor_seri_awal) like :keyword1 
+	or upper(b.nomor_seri_akhir) like :keyword2)
+
+-- name: GetChequeList-filter-StatusBuku
+and (upper(b.status_buku) = :status_buku)
 
 -- name: GetChequeDetail-main
 select b.id_bukuwarkat, b.nomor_rekening, n.nomor_seri, 
@@ -1238,7 +1266,7 @@ select b.id_bukuwarkat, n.nomor_seri, n.status_warkat, n.jenis_warkat,
 		where n.nomor_seri = :nomor_seri
 
 -- name: PostChqBook-main
-insert into %s.bukuwarkat
+insert into %[1]s.bukuwarkat
 		(id_bukuwarkat, nomor_seri_awal, nomor_seri_akhir, lembar_terpakai, lembar_tersedia, jenis_warkat,  is_otorisasi, tanggal_otorisasi, 
 			user_otorisasi, user_input, nomor_rekening, status_buku, tanggal_input) 
 		values 
@@ -1345,6 +1373,18 @@ select rl.nomor_nasabah, rt.nomor_rekening, rt.nama_rekening, rt.kode_cabang
 		%[2]s
 		OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
 
+-- name: GetDepList-filter-KodeCabang
+and rt.kode_cabang = :kode_cabang
+
+-- name: GetDepList-filter-StatusRekening
+and rt.status_rekening = :status_rekening
+
+-- name: GetDepList-filter-Keyword
+and ((upper(rt.nama_rekening) like :keyword1 or upper(rt.nomor_rekening) like :keyword2))
+
+-- name: GetDepList-filter-NomorNasabah
+and rl.nomor_nasabah = :nomor_nasabah
+
 -- name: GetDetailDep-main
 select rl.nomor_rekening, rl.nomor_nasabah, rt.kode_valuta, rt.kode_cabang, c.nama_cabang, rt.user_input, 
 			rt.nama_rekening, rt.nama_valuta, rt.keterangan, rl.is_bagi_hasil_khusus, rl.is_tiering_nisbahbonus, d.jenis_alamat_bilyet as alamat_bilyet,
@@ -1376,7 +1416,7 @@ select rl.nomor_rekening, rl.nomor_nasabah, rt.kode_valuta, rt.kode_cabang, c.na
 			and rl.nomor_rekening = :nomor_rekening
 
 -- name: CreateDeposito-main
-insert into %s.deposito(
+insert into %[1]s.deposito(
 			nomor_rekening, tanggal_jatuh_tempo_terakhir, cadangan_bagihasil_kapitalisir, masa_perjanjian,
 			periode_perjanjian, nomor_bilyet, tanggal_jatuh_tempo_berikutnya, disposisi_nominal,
 			rekening_disposisi, penerima_transfer_disposisi, is_aro, is_sudah_disetor ,is_sedang_dicairkan ,
@@ -1391,7 +1431,7 @@ insert into %s.deposito(
 
 -- name: GetDepositoByNoBilyet-main
 select d.nomor_rekening, d.nomor_bilyet 
-		from %s.deposito d 
+		from %[1]s.deposito d 
 		where d.nomor_bilyet = :nomor_bilyet
 
 -- name: GetDepositoBilyetPrint-main
@@ -1410,7 +1450,7 @@ select rt.nomor_rekening, rt.nama_rekening, rt.kode_cabang, c.nama_cabang, nvl(r
 		where rt.nomor_rekening = :nomor_rekening
 
 -- name: UpdateBilyetPrintStatus-main
-UPDATE %s.deposito
+UPDATE %[1]s.deposito
 		SET is_sudah_cetak_bilyet = :IS_SUDAH_CETAK_BILYET 
 		WHERE nomor_rekening = :NOMOR_REKENING
 
@@ -1450,14 +1490,14 @@ select
 	order by Tanggal_Efektif, n.Nomor_Rekening
 
 -- name: ModAcctDepRT-main
-update %s.rekeningtransaksi 
+update %[1]s.rekeningtransaksi 
 		set nama_rekening = :NAMA_REKENING, keterangan = :KETERANGAN, 
 			tanggal_perbarui = current_timestamp, tanggal_update = :TANGGAL_UPDATE, 
 			user_perbarui = :USER_PERBARUI 
 		where nomor_rekening= :NOMOR_REKENING
 
 -- name: ModAcctDepRL-main
-update %s.rekeningliabilitas 
+update %[1]s.rekeningliabilitas 
 		set nama_singkat = :NAMA_SINGKAT, kode_marketing_referensi = :KODE_MARKETING_REFERENSI, kode_marketing_pertama = :KODE_MARKETING_PERTAMA, 
 			kode_marketing_current = :KODE_MARKETING_CURRENT, kode_program = :KODE_PROGRAM, kode_sumber_dana = :KODE_SUMBER_DANA, 
 			kode_tujuan_rekening = :KODE_TUJUAN_REKENING, status_kelengkapan = :STATUS_KELENGKAPAN, is_dapat_bagi_hasil = :IS_DAPAT_BAGI_HASIL, 
@@ -1470,13 +1510,13 @@ update %s.rekeningliabilitas
 		where nomor_rekening = :NOMOR_REKENING
 
 -- name: ModAcctDepDeposito-main
-update %s.deposito 
+update %[1]s.deposito 
 		set nomor_bilyet = :NOMOR_BILYET, disposisi_nominal = :DISPOSISI_NOMINAL, rekening_disposisi = :REKENING_DISPOSISI, 
 			penerima_transfer_disposisi = :PENERIMA_TRANSFER_DISPOSISI, jenis_alamat_bilyet = :JENIS_ALAMAT_BILYET, is_aro = :IS_ARO
 		where nomor_rekening = :NOMOR_REKENING
 
 -- name: ModDepForclose-main
-update %s.deposito 
+update %[1]s.deposito 
 		set is_sedang_dicairkan = :IS_SEDANG_DICAIRKAN
 		where nomor_rekening = :NOMOR_REKENING
 
@@ -1492,7 +1532,7 @@ delete from %[1]s.infopencairanawaldeposito
 		where id_transaksi = :id_transaksi
 
 -- name: UpdateDepositoPencairanAwalDeposito-main
-update %s.deposito 
+update %[1]s.deposito 
 		set is_aro = :IS_ARO, disposisi_nominal = :DISPOSISI_NOMINAL, rekening_disposisi = :REKENING_DISPOSISI, 
 			penerima_transfer_disposisi = :PENERIMA_TRANSFER_DISPOSISI, cadangan_bagihasil_kapitalisir = :CADANGAN_BAGIHASIL_KAPITALISIR
 		where nomor_rekening = :NOMOR_REKENING
@@ -1508,11 +1548,11 @@ select
 		n.ID_GROUP
 
 -- name: DelNotaDebitOutward-main
-DELETE FROM %s.NOTADEBITOUTWARD 
+DELETE FROM %[1]s.NOTADEBITOUTWARD 
 		WHERE id_group = :id_group
 
 -- name: DelNotaDebitOutwardGroup-main
-DELETE FROM %s.NOTADEBITOUTWARDGROUP 
+DELETE FROM %[1]s.NOTADEBITOUTWARDGROUP 
 		WHERE id_group = :id_group
 
 -- name: GetDepForClose-main
@@ -1546,6 +1586,9 @@ select t.id_transaksi, t.id_batch_transaksi, to_char(t.tanggal_transaksi, 'yyyy-
 		%[2]s
 	order by tanggal_transaksi asc
 
+-- name: GetDepWithdrawListToday-filter-UserInput
+and t.user_input = :user_input
+
 -- name: GetDepWithdrawListHist-main
 select ht.id_transaksi, ht.id_batch_transaksi, to_char(ht.tanggal_transaksi, 'yyyy-mm-dd') as tanggal_transaksi, i.nomor_rekening, 
 			rt.nama_rekening, i.nilai_pencairan, i.kode_valuta, ht.kode_cabang_transaksi, ht.status_otorisasi, 
@@ -1565,6 +1608,9 @@ select ht.id_transaksi, ht.id_batch_transaksi, to_char(ht.tanggal_transaksi, 'yy
 			and i.tanggal_proses <= to_timestamp(:tanggal_akhir,'yyyy-mm-dd')   
 			%[2]s 
 		order by tanggal_transaksi asc
+
+-- name: GetDepWithdrawListHist-filter-UserInput
+and ht.user_input = :user_input
 
 -- name: GetDepWithdrawToday-main
 select t.id_transaksi, t.id_batch_transaksi, to_char(t.tanggal_transaksi, 'yyyy-mm-dd') as tanggal_transaksi, i.nomor_rekening, 
@@ -1691,14 +1737,14 @@ and upper(m.is_dhn) = :is_dhn
 -- name: GetDetilDHIBData-main
 select d.id_dhn ,d.no_nasabah ,d.nama_nasabah ,d.jenis_nasabah ,d.nomor_identitas ,to_char(d.tgl_lahir, 'yyyy-mm-dd') as tgl_lahir ,d.no_nasabah ,d.gelar 
 			,d.is_bbl ,d.alamat_jalan ,d.alamat_rt ,d.alamat_rw ,d.alamat_kelurahan ,d.alamat_kecamatan ,d.alamat_kota_kabupaten ,d.alamat_provinsi ,d.alamat_kode_pos 
-		from %s.dhib d 
+		from %[1]s.dhib d 
 		where d.no_nasabah = :nomor_nasabah
 
 -- name: GetDetilDHNData-main
 select d2.id_dhn ,d2.no_dhn ,d2.no_urut ,d2.nomor_ref ,d2.sandi_bank_asal ,d2.nama_bank_asal ,d2.nama_nasabah ,d2.status_usaha ,d2.jenis_nasabah ,d2.nomor_identitas ,d2.nomor_npwp 
 			,to_char(d2.tgl_lahir, 'yyyy-mm-dd') as tgl_lahir, d2.keterangan ,to_char(d2.batas_sanksi, 'yyyy-mm-dd') as batas_sanksi, d2.alamat_jalan ,d2.alamat_rt ,d2.alamat_rw 
 			,d2.alamat_kelurahan ,d2.alamat_kecamatan ,d2.alamat_kota_kabupaten ,d2.alamat_provinsi ,d2.alamat_kode_pos 
-		from %s.dhn d2
+		from %[1]s.dhn d2
 		where d2.id_dhn = :id_dhn
 
 -- name: GetDetiltransgroupclass-main
@@ -1733,11 +1779,11 @@ SELECT
 		ELSE (
 		SELECT count(*) as coll_count 
 		FROM %[1]s.fincollateralaccount f 
-		WHERE f.norek_finaccount = :nomor_rekening
+		WHERE f.norek_finaccount = :nomor_rekening1
 		) END as coll_count 
 	FROM %[1]s.finaccount fa, %[1]s.finproduct fp 
 	WHERE 
-	fa.nomor_rekening = :nomor_rekening 
+	fa.nomor_rekening = :nomor_rekening2 
 	AND fa.product_code = fp.product_code
 
 -- name: GetNeedFindataComplete-main
@@ -1760,7 +1806,7 @@ SELECT
 	WHERE nomor_rekening = :nomor_rekening 
 
 -- name: UpdateDroppingFinAccount-main
-UPDATE %s.finaccount SET
+UPDATE %[1]s.finaccount SET
 			drop_counter = :DROP_COUNTER,
 			dropping_amount = :DROPPING_AMOUNT,
 			norek_disbursaldest = :NOREK_DISBURSALDEST,
@@ -1778,7 +1824,7 @@ UPDATE %s.finaccount SET
 		WHERE nomor_rekening = :NOMOR_REKENING
 
 -- name: UpdateFinAccount-main
-UPDATE %s.finaccount SET
+UPDATE %[1]s.finaccount SET
 			id_schedule = :ID_SCHEDULE
 			, period_count = :PERIOD_COUNT
 			, due_date = :DUE_DATE
@@ -1827,7 +1873,7 @@ SELECT
 			VALUATION, MARKET_VALUE, LIQUIDATION_VALUE, 
 			DOCUMENT_NO, COL_DOC_NO, COL_DOC_STATUS, 
 			EXPIRE_DATE, DOC_STORAGE
-		FROM %s.FINCOLLATERALASSET
+		FROM %[1]s.FINCOLLATERALASSET
 		WHERE NOMOR_REKENING = :NOMOR_REKENING
 
 -- name: GetNextColAccountNumber1-main
@@ -1851,20 +1897,26 @@ SELECT *
 		FROM %[1]s.HOLDDANAREKENING 
 		WHERE %[2]s
 
+-- name: GetHoldDanaRekening-filter-IdHoldDana
+ID_HOLD_DANA = :ID_HOLD_DANA
+
+-- name: GetHoldDanaRekening-filter-NomorReferensiHold
+NOMOR_REFERENSI = :NOMOR_REFERENSI_HOLD
+
 -- name: UpdateSaldoHoldReleaseAgunan-main
 UPDATE %[1]s.REKENINGLIABILITAS
 		SET SALDO_DITAHAN = SALDO_DITAHAN - :NOMINAL_HOLD
 		WHERE NOMOR_REKENING = :NOMOR_REKENING
 
 -- name: UpdateFinMusyarakahAccount-main
-UPDATE %s.finmusyarakahaccount SET
+UPDATE %[1]s.finmusyarakahaccount SET
 			total_projected_income = :TOTAL_PROJECTED_INCOME,
 			pricing_model = :PRICING_MODEL,
 			is_balloon_payment = :IS_BALLOON_PAYMENT
 		WHERE nomor_rekening = :NOMOR_REKENING
 
 -- name: CreateFinPaymentSchedule-main
-INSERT INTO %s.finpaymentschedule (
+INSERT INTO %[1]s.finpaymentschedule (
 			ID_SCHEDULE
 			, CREATION_DATE
 			, CUSTOMER_NAME
@@ -2000,7 +2052,7 @@ INSERT INTO %[1]s.finpaymentscheddetail (
 		)
 
 -- name: UpdateFinPaymentSchedule-main
-UPDATE %s.finpaymentschedule SET
+UPDATE %[1]s.finpaymentschedule SET
 			PERIOD = :period,
 			INITIAL_PROFIT_AMT = :initial_profit_amt,
 			MUKASAH_RATE = :mukasah_rate,
@@ -2183,6 +2235,9 @@ select rl.nomor_nasabah, n.jenis_nasabah, rl.nomor_rekening, rt.nama_rekening, r
 			and rt.kode_jenis in ('SAV', 'CA') 
 			and rl.nomor_rekening = :nomor_rekening
 
+-- name: GetRekeningTabgirDetail-filter-StatusRekening
+and rt.status_rekening = :status_rekening
+
 -- name: UpdateIsSedangTutup-main
 update %[1]s.rekeningliabilitas
 		set is_sedang_ditutup = :is_sedang_ditutup
@@ -2292,6 +2347,15 @@ select t.id_transaksi, to_char(t.tanggal_transaksi, 'YYYY-MM-DD') as tanggal_tra
 		%v
 		order by t.jam_input
 		offset :bw1 rows fetch next :bw2 rows only
+
+-- name: GetTrxList-filter-Default
+where 1=1
+
+-- name: GetTrxList-filter-NomorReferensi
+and t.nomor_referensi = :nomor_referensi
+
+-- name: GetTrxList-filter-KodeCabangTransaksi
+and t.kode_cabang_transaksi = :kode_cabang_transaksi
 
 -- name: GetTrxByNoref-main
 select t.id_transaksi ,t.nomor_referensi
@@ -2430,6 +2494,18 @@ select hd.id_detil_transaksi, to_char(ht.tanggal_transaksi, 'yyyy-mm-dd') as tan
 		%[2]s
 		order by hd.id_detil_transaksi
 		offset :bw1 rows fetch next :bw2 rows only
+
+-- name: GetHistTrxList-filter-Default
+where ht.tanggal_transaksi >= to_date(:tanggal_awal, 'yyyy-mm-dd') and ht.tanggal_transaksi < to_date(:tanggal_akhir, 'yyyy-mm-dd')
+
+-- name: GetHistTrxList-filter-NomorReferensi
+and ht.nomor_referensi = :nomor_referensi
+
+-- name: GetHistTrxList-filter-KodeCabangTransaksi
+and ht.kode_cabang_transaksi = :kode_cabang_transaksi
+
+-- name: GetHistTrxList-filter-NomorRekening
+and hd.nomor_rekening = :nomor_rekening
 
 -- name: GetSaldoByDate-main
 select round(balance, 2) as balance
@@ -2768,7 +2844,7 @@ SELECT T.ID_TRANSAKSI, T.TANGGAL_TRANSAKSI, USER_INPUT, T.KETERANGAN, T.NOMOR_RE
 	GROUP BY T.ID_TRANSAKSI, T.TANGGAL_TRANSAKSI, USER_INPUT, T.KETERANGAN, T.NOMOR_REFERENSI, KODE_TRANSAKSI
 
 -- name: GetSequenceTempPostMultiJournal-main
-select %s.seq_val_transaksi_umum.nextval from dual
+select %[1]s.seq_val_transaksi_umum.nextval from dual
 
 -- name: InsertToPostMultiJournalTempTable-main
 insert into %[1]v.validasi_transaksi_umum 
@@ -2847,10 +2923,10 @@ delete from %[1]s.validasi_transaksi_umum
 		where id_session = :id_session
 
 -- name: GetSequenceTempTrxPayroll-main
-SELECT %s.seq_val_transaksi_payroll.nextval from dual
+SELECT %[1]s.seq_val_transaksi_payroll.nextval from dual
 
 -- name: InsertValidasiTempTrxPayroll-main
-INSERT INTO %s.VALIDASI_TRANSAKSI_PAYROLL (ID_SESSION, NOMOR_REKENING ,NOMINAL, KETERANGAN, IS_VALID)
+INSERT INTO %[1]s.VALIDASI_TRANSAKSI_PAYROLL (ID_SESSION, NOMOR_REKENING ,NOMINAL, KETERANGAN, IS_VALID)
 		VALUES (:ID_SESSION, :NOMOR_REKENING, :NOMINAL, :KETERANGAN, 'T')
 
 -- name: CheckTmpPayrollRekeningValid-main
@@ -2881,18 +2957,18 @@ SELECT NOMOR_REKENING, NAMA_REKENING, KETERANGAN,
 		WHERE tmp.ID_SESSION = :ID_SESSION
 
 -- name: DeleteTempTrxPayroll-main
-DELETE FROM  %s.VALIDASI_TRANSAKSI_PAYROLL TMP WHERE ID_SESSION= :ID_SESSION
+DELETE FROM  %[1]s.VALIDASI_TRANSAKSI_PAYROLL TMP WHERE ID_SESSION= :ID_SESSION
 
 -- name: GetSequenceTempTrxMulti-main
-SELECT %s.seq_val_transaksi_umum.nextval from dual
+SELECT %[1]s.seq_val_transaksi_umum.nextval from dual
 
 -- name: InsertValidasiTempTrxMulti-main
-insert into %s.validasi_transaksi_umum 
+insert into %[1]s.validasi_transaksi_umum 
 		(id_session, kode_tipe, nomor_rekening, jenis_mutasi, nominal, keterangan, kode_rc, is_valid)
 		values (:ID_SESSION, :KODE_TIPE, :NOMOR_REKENING, :JENIS_MUTASI, :NOMINAL, :KETERANGAN, :KODE_RC, 't')
 
 -- name: CheckTmpTrxMultiCodeTypeValid-main
-UPDATE %s.validasi_transaksi_umum tmp
+UPDATE %[1]s.validasi_transaksi_umum tmp
 		SET is_valid ='F'
 		, invalid_message = invalid_message || 'kode tipe rekening tidak valid, '
 		WHERE kode_tipe not in ('001','002')
@@ -2913,7 +2989,7 @@ UPDATE %[1]s.validasi_transaksi_umum tmp
 		AND NOT EXISTS (SELECT 1 FROM %[2]s.rekeningtransaksi n WHERE n.NOMOR_rekening=tmp.NOMOR_rekening and n.kode_jenis in ('SAV','CA','RAB','DEP'))
 
 -- name: CheckTmpTrxMultiByMutasi-main
-UPDATE %s.validasi_transaksi_umum tmp
+UPDATE %[1]s.validasi_transaksi_umum tmp
 		SET is_valid ='F'
 		, invalid_message = invalid_message || 'jenis mutasi tidak valid, '
 		WHERE jenis_mutasi not in ('D','C')
@@ -2959,7 +3035,7 @@ UPDATE %[1]s.validasi_transaksi_umum tmp
 		AND EXISTS (SELECT 1 FROM %[2]s.rekeningtransaksi n WHERE n.NOMOR_rekening=tmp.NOMOR_rekening and n.status_rekening = 2)
 
 -- name: ValidasiNominalTmpTrxMulti-main
-UPDATE %s.validasi_transaksi_umum tmp
+UPDATE %[1]s.validasi_transaksi_umum tmp
 		SET is_valid ='F'
 		, invalid_message = invalid_message || 'nominal transaksi tidak valid (nominal <= 0.0)  , '
 		WHERE ID_SESSION = :ID_SESSION
@@ -2996,7 +3072,7 @@ UPDATE %[1]s.validasi_transaksi_umum tmp
 		AND EXISTS (SELECT 1 FROM %[2]s.rekeningliabilitas n WHERE n.NOMOR_rekening=tmp.NOMOR_rekening and nvl(n.is_blokir_debet,'F') ='T')
 
 -- name: ValidasiSaldoEfektifTmpTrxMulti-main
-UPDATE %s.validasi_transaksi_umum tmp
+UPDATE %[1]s.validasi_transaksi_umum tmp
 		SET is_valid ='F'
 		, invalid_message = invalid_message || 'saldo efektif rekening tidak cukup, '
 		WHERE ID_SESSION = :ID_SESSION
@@ -3022,12 +3098,12 @@ SELECT KODE_TIPE, NOMOR_REKENING, NAMA_REKENING,
 -- name: GetTotalNominalTmpMultiTrx-main
 select jenis_mutasi, sum(nominal) as total_nominal 
 		from
-		%s.validasi_transaksi_umum 
+		%[1]s.validasi_transaksi_umum 
 		where id_session=:ID_SESSION
 		group by jenis_mutasi
 
 -- name: DeleteTempMultiTrx-main
-delete from  %s.validasi_transaksi_umum tmp where id_session= :ID_SESSION
+delete from  %[1]s.validasi_transaksi_umum tmp where id_session= :ID_SESSION
 
 -- name: GetRekeningLayanan-main
 SELECT regl.NOMOR_REKENING_LAYANAN , regw.NOMOR_REKENING_TUJUAN, regw.SALDO_MINIMAL
@@ -3047,6 +3123,12 @@ update %[1]s.detiltransaksi dt
 					and %[2]s
 			)
 
+-- name: UpdateNilaiKurs-filter-IdTransaksiNotZero
+dt.id_transaksi = :ID_TRANSAKSI
+
+-- name: UpdateNilaiKurs-filter-IdTransaksiZero
+dt.flag_sent is null
+
 -- name: UpdateNilaiEkuivalen-main
 update %[1]s.detiltransaksi dt
 		set nilai_ekuivalen = nilai_mutasi * nilai_kurs_manual
@@ -3057,6 +3139,12 @@ update %[1]s.detiltransaksi dt
 				where ptj.id_transaksi = dt.id_transaksi
 					and %[2]s
 			)
+
+-- name: UpdateNilaiEkuivalen-filter-IdTransaksiNotZero
+dt.id_transaksi = :ID_TRANSAKSI
+
+-- name: UpdateNilaiEkuivalen-filter-IdTransaksiZero
+dt.flag_sent is null
 
 -- name: GetTrxDetailByUidkey-main
 select i.uidkey, t.id_transaksi ,d.kode_jurnal, t.kode_cabang_transaksi, rt.nama_rekening 
@@ -3074,6 +3162,12 @@ select i.uidkey, t.id_transaksi ,d.kode_jurnal, t.kode_cabang_transaksi, rt.nama
 	%[1]v
 	order by d.id_transaksi ,d.id_detil_transaksi
 
+-- name: GetTrxDetailByUidkey-filter-TrxTypeDefault
+and uidkey = :uidkey
+
+-- name: GetTrxDetailByUidkey-filter-TrxType
+and uidkey in (:uidkey1, :uidkey2)
+
 -- name: GetHistTrxDetailByUidkey-main
 select i.uidkey, t.id_transaksi ,d.kode_jurnal, t.kode_cabang_transaksi, rt.nama_rekening 
 	,d.nomor_rekening ,d.keterangan ,d.kode_valuta, d.jenis_mutasi,
@@ -3089,6 +3183,12 @@ select i.uidkey, t.id_transaksi ,d.kode_jurnal, t.kode_cabang_transaksi, rt.nama
 	where action_type = :action_type
 	%[1]v
 	order by d.id_transaksi ,d.id_detil_transaksi
+
+-- name: GetHistTrxDetailByUidkey-filter-TrxTypeDefault
+and uidkey = :uidkey
+
+-- name: GetHistTrxDetailByUidkey-filter-TrxType
+and uidkey in (:uidkey1, :uidkey2)
 
 -- name: GetDetailTrxDetail-main
 select 
@@ -3323,6 +3423,20 @@ from %[1]s.account ac
 		%[3]s
     order by branch_code, account_code
 
+-- name: RptTrialBalance-filter-HasValueOnly
+and (
+    case when mut.debit is null then 0.0 else mut.debit end <> 0.0
+    or case when mut.credit is null then 0.0 else mut.credit end <> 0.0
+    or case when j.debit is null then 0.0 else j.debit end <> 0.0
+    or case when j.credit is null then 0.0 else j.credit end <> 0.0
+    or case when j.balance is null then 0.0 else j.balance end <> 0.0
+    or case when db.balancecumulative is null then 0.0 else db.balancecumulative end <> 0.0
+    or case when db2.balancecumulative is null then 0.0 else db2.balancecumulative end <> 0.0
+)
+
+-- name: RptTrialBalance-filter-CompanyCode
+AND ac.company_code = :company_code
+
 -- name: GetAccDayByPeriode-main
 select datevalue from %[1]s.accountingday where periode_status = 'A'
 
@@ -3425,6 +3539,18 @@ select agentcode ,agentname ,statusactive
 from %[1]s.fundingagent f 
 where %[2]s
 
+-- name: GetListAccountOfficer-filter-Default
+1=1
+
+-- name: GetListAccountOfficer-filter-AgentCode
+and f.agentcode = :agentcode
+
+-- name: GetListAccountOfficer-filter-AgentName
+and f.agentname LIKE  '%' || :agentname || '%'
+
+-- name: GetListAccountOfficer-filter-StatusActive
+and f.statusactive = :statusactive
+
 -- name: GetFundingAgent-main
 select agentcode ,agentname ,statusactive
 from %[1]s.fundingagent
@@ -3451,7 +3577,7 @@ values(:UIDKEY, current_timestamp, :ACTION_TYPE, :USER_INPUT, :USER_OTOR, :KETER
 
 -- name: GetPod-main
 select to_char(nilai_parameter_tanggal, 'YYYY-MM-DD') as today
-from %s.parameterglobal
+from %[1]s.parameterglobal
 where kode_parameter = :kode_parameter
 
 -- name: GetAccountNo-main
@@ -3504,10 +3630,10 @@ from %[1]s.parameterbiaya p
 where gpb.kode_grup_biaya = :kode_grup_biaya
 
 -- name: GetTransaksiID-main
-select %s.seq_transaksi.nextval as id_transaksi from dual
+select %[1]s.seq_transaksi.nextval as id_transaksi from dual
 
 -- name: GetTransaksiDetailID-main
-select %s.seq_detiltransaksi.nextval as id_detil_transaksi from dual
+select %[1]s.seq_detiltransaksi.nextval as id_detil_transaksi from dual
 
 -- name: GetCustomIdgen-main
 select idcode,
@@ -3530,11 +3656,11 @@ where gi.kode_interface = :KODE_INTERFACE
 and gi.kode_produk = :KODE_PRODUK
 
 -- name: GetGlAccount-main
-select * from %s.glaccount where nomor_rekening = :nomor_rekening
+select * from %[1]s.glaccount where nomor_rekening = :nomor_rekening
 
 -- name: GetGlobalGlInterface-main
 select kode_account, kode_interface, nama_account
-from %s.globalglinterface 
+from %[1]s.globalglinterface 
 where kode_interface = :kode_interface
 
 -- name: InsertRakOtomatis-main
@@ -3568,6 +3694,12 @@ select acc.account_code, acc.account_name, acc.account_type
 		group by acc.account_code, acc.account_name, acc.account_type
 		order by acc.account_code, acc.account_name, acc.account_type
 
+--name: GetGLList-filter-Default
+1=1
+
+--name: GetGLList-filter-Keyword
+and (acc.account_code like :keyword or acc.account_name like :keyword2)
+
 -- name: GetGLJurnal-main
 SELECT 
     j.journal_no, 
@@ -3591,6 +3723,14 @@ LEFT JOIN ibcoreprod.transaksi t ON t.journal_no = j.journal_no
 WHERE %[2]s
 ORDER BY journal_date desc 
 OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
+
+-- name: GetGLJurnal-filter-Default
+(1 = :all_cabang or branch_code = :kode_cabang )
+    AND journal_date >= TO_DATE(:tgl_awal, 'YYYY-MM-DD') 
+	AND journal_date < TO_DATE(:tgl_akhir, 'YYYY-MM-DD')
+
+-- name: GetGLJurnal-filter-JurnalNoGTZero
+and journal_no LIKE ( '%%' || :journal_no || '%%' )
 
 -- name: DetailGLJurnal-main
 SELECT 
@@ -3819,6 +3959,12 @@ using %[1]s.transaksi upd
 on (upd.id_transaksi = target.id_transaksi and %[2]s)
 when matched then update set journal_no = upd.journal_no
 
+--name: MergeJournalNumber-filter-IdTransaksiNotZero
+target.id_transaksi = :ID_TRANSAKSI
+
+--name: MergeJournalNumber-filter-IdTransaksiZero
+target.flag_sent is null
+
 -- name: InsertSelectJournal-main
 insert into %[1]s.journal (
     journal_no, journal_date_posting, description, userid_create, userid_posting, is_posted, journal_type, journal_date, lastitemno, 
@@ -3835,6 +3981,12 @@ where %[2]s
     and ptj.journal_no is not null
     and ptj.id_transaksi = t.id_transaksi
     and accd.datevalue = to_date(:DATE_VALUE, 'yyyy-mm-dd') 
+
+-- name: InsertSelectJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: InsertSelectJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: InsertSelectJournalItem-main
 insert into %[1]s.journalitem (
@@ -3860,6 +4012,12 @@ from %[1]s.pendingtransactionjournal ptj
     inner join %[1]s.accountinstance ai on (ai.account_code = dt.kode_account and ai.branch_code = dt.kode_cabang and ai.currency_code = dt.kode_valuta)
     left join %[1]s.rekeningtransaksi rt on rt.nomor_rekening = dt.nomor_rekening
 where %[2]s
+
+-- name: InsertSelectJournalItem-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: InsertSelectJournalItem-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: BalancingRAKOtomatisJournal-main
 insert into %[1]s.journalitem (
@@ -3901,6 +4059,12 @@ using (
 when matched then
 update set is_sudah_dijurnal = 'T'
 
+-- name: UpdateTrxStatusJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: UpdateTrxStatusJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
+
 -- name: InsertCompletedJournal-main
 insert into %[1]s.completedtransactionjournal
 (id_transaksi, journal_no)
@@ -3908,9 +4072,21 @@ select id_transaksi, journal_no
 from %[1]s.pendingtransactionjournal ptj
 where %[2]s
 
+-- name: InsertCompletedJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: InsertCompletedJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
+
 -- name: DeletePendingJournal-main
 delete from %[1]s.pendingtransactionjournal ptj
 where %[2]s
+
+-- name: DeletePendingJournal-filter-IdTransaksiNotZero
+ptj.id_transaksi = :ID_TRANSAKSI
+
+-- name: DeletePendingJournal-filter-IdTransaksiZero
+ptj.flag_sent is null
 
 -- name: GetDenominasitransaksikas-main
 select id_denominasitransaksikas, id_denominasi_valuta, id_detil_transaksi, jumlah_denominasi, jumlah_denominasi_tle
@@ -4227,7 +4403,7 @@ select nama_layanan, deskripsi, jenis_layanan, id_layanan, periode_proses_layana
     jumlah_maksimal_register, is_ada_proses_periodik, tanggal_proses_pertama, is_layanan_system, is_override_tanggal_proses, 
     nomor_rekening_biaya, jarak_periode_proses, status_biaya_proses, status_data, tag_layanan, biaya_layanan, id_event, user_pembuat, 
     user_pengubah 
-from %s.layanan l 
+from %[1]s.layanan l 
 where nama_layanan = :nama_layanan
 
 -- name: CreateListIndRekening-main
@@ -4253,7 +4429,7 @@ set is_aktif = 'F'
 where nomor_rekening = :nomor_rekening
 
 -- name: UpdateStatusListRek-main
-update %s.listnomorrekening
+update %[1]s.listnomorrekening
 set status = 'U'
 where nomor_rekening = :nomor_rekening
 
@@ -4274,12 +4450,12 @@ values
 (%[1]s.seq_multiciflink.nextval, :NOMOR_REKENING, :NOMOR_NASABAH)
 
 -- name: DeleteMultiCIFLink-main
-delete from %s.multiciflink
+delete from %[1]s.multiciflink
 where nomor_rekening = :nomor_rekening
 
 -- name: GetNasabah-main
 select n.nomor_nasabah, n.nama_nasabah, n.jenis_nasabah, n.status_data
-from %s.nasabah n 
+from %[1]s.nasabah n 
 where n.nomor_nasabah = :nomor_nasabah
 
 -- name: GetNasabahIndividu-main
@@ -4573,6 +4749,20 @@ where (d.hide_passbook = 'F' or d.hide_passbook is null)
     %[3]s
 order by id_cetak_passbook
 
+-- name: GetCollectionDataTrx-filter-CetakUlangTrue
+and i.is_sudah_cetak = 'T'
+
+-- name: GetCollectionDataTrx-filter-CetakUlangFalse
+and i.is_sudah_cetak = 'F'
+
+-- name: GetCollectionDataTrx-filter-AllDataTrue1
+and i.id_cetak_passbook >= :id_cetak_awal
+	and i.id_cetak_passbook <= :id_cetak_akhir
+
+-- name: GetCollectionDataTrx-filter-AllDataTrue2
+and i.id_cetak_passbook >= :id_cetak_awal2
+	and i.id_cetak_passbook <= :id_cetak_akhir2
+
 -- name: GetBalance-main
 select balance
 from %[1]s.dailybalancerekening d1
@@ -4774,7 +4964,7 @@ VALUES
 (%[1]s.seq_glinterface.nextval, :KODE_INTERFACE, :DESKRIPSI, :KODE_ACCOUNT)
 
 -- name: UpdateGlInterface-main
-UPDATE %s.GLINTERFACE
+UPDATE %[1]s.GLINTERFACE
 SET
     KODE_INTERFACE = :KODE_INTERFACE,
     DESKRIPSI = :DESKRIPSI,
@@ -4825,7 +5015,7 @@ SET
 WHERE ID_KETENTUAN = :ID_KETENTUAN	
 
 -- name: InsertDataProdukSav-main
-INSERT INTO %s.PRODUK (
+INSERT INTO %[1]s.PRODUK (
     KODE_PRODUK, NAMA_PRODUK, IS_ONBALANCESHEETMODE, SALDO_MINIMUM_TIDAK_AKTIF,
     JUMLAH_HARI_JADI_TIDAK_AKTIF, SALDO_MINIMUM, SALDO_MAKSIMUM, IS_BACKDATED,
     JUMLAH_BULAN_MAKS_BACKDATED, IS_KENA_ZAKAT_BAGI_HASIL,
@@ -4868,7 +5058,7 @@ INSERT INTO %s.PRODUK (
 )
 
 -- name: InsertDataProdukDep-main
-INSERT INTO %s.PRODUK (
+INSERT INTO %[1]s.PRODUK (
     KODE_PRODUK, NAMA_PRODUK, IS_ONBALANCESHEETMODE, SALDO_MINIMUM_TIDAK_AKTIF,
     JUMLAH_HARI_JADI_TIDAK_AKTIF, SALDO_MINIMUM, SALDO_MAKSIMUM, IS_BACKDATED,
     JUMLAH_BULAN_MAKS_BACKDATED, IS_KENA_ZAKAT_BAGI_HASIL,
@@ -4911,7 +5101,7 @@ INSERT INTO %s.PRODUK (
 )
 
 -- name: InsertDataProdukGiro-main
-INSERT INTO %s.PRODUK (
+INSERT INTO %[1]s.PRODUK (
 		KODE_PRODUK, NAMA_PRODUK, IS_ONBALANCESHEETMODE, SALDO_MINIMUM_TIDAK_AKTIF,
     JUMLAH_HARI_JADI_TIDAK_AKTIF, SALDO_MINIMUM, SALDO_MAKSIMUM, IS_BACKDATED,
     JUMLAH_BULAN_MAKS_BACKDATED, IS_KENA_ZAKAT_BAGI_HASIL,
@@ -4954,7 +5144,7 @@ INSERT INTO %s.PRODUK (
 )
 
 -- name: InsertProdukDep-main
-INSERT INTO %s.PRODUKDEPOSITO (
+INSERT INTO %[1]s.PRODUKDEPOSITO (
     KODE_PRODUK, MASA_PERJANJIAN,MASA_PERJANJIAN_MAKSIMAL ,MASA_PERJANJIAN_MINIMAL ,
     IS_MASA_PERJANJIAN_BEBAS, IS_KENA_PENALTY ,NOMINAL_PENALTY 
 ) VALUES (
@@ -4963,7 +5153,7 @@ INSERT INTO %s.PRODUKDEPOSITO (
 )
 
 -- name: UpdateProdukDep-main
-UPDATE %s.PRODUKDEPOSITO
+UPDATE %[1]s.PRODUKDEPOSITO
 SET MASA_PERJANJIAN = :MASA_PERJANJIAN,
     MASA_PERJANJIAN_MAKSIMAL = :MASA_PERJANJIAN_MAKSIMAL,
     MASA_PERJANJIAN_MINIMAL = :MASA_PERJANJIAN_MINIMAL,
@@ -4981,29 +5171,29 @@ select %[1]s.seq_tieringplan.nextval as id_tiering_biayaadm
 from dual
 
 -- name: UpdateIdTeringNisbahBonus-main
-update %s.produk
+update %[1]s.produk
 set id_tiering_nisbahbonus = :id_tiering_nisbahbonus
 where kode_produk = :kode_produk
 
 -- name: UpdateIdTieringBiayaAdmin-main
-update %s.produk
+update %[1]s.produk
 set id_tiering_biayaadm = :id_tiering_biayaadm
 where kode_produk = :kode_produk
 
 -- name: InsertTieringPlan-main
-insert into %s.tieringplan(tieringid, tieringtype)
+insert into %[1]s.tieringplan(tieringid, tieringtype)
 values(:id_tiering_nisbahbonus, :tieringtype)
 
 -- name: GetKodeProdukExist-main
 SELECT p.KODE_PRODUK 
-FROM %s.produk p WHERE p.KODE_PRODUK = :kode_produk
+FROM %[1]s.produk p WHERE p.KODE_PRODUK = :kode_produk
 
 -- name: GetKodeProdukDepExist-main
 SELECT p.KODE_PRODUK 
-FROM %s.PRODUKDEPOSITO p WHERE p.KODE_PRODUK = :kode_produk
+FROM %[1]s.PRODUKDEPOSITO p WHERE p.KODE_PRODUK = :kode_produk
 
 -- name: ModDataProduk-main
-UPDATE %s.PRODUK
+UPDATE %[1]s.PRODUK
 SET 
     NAMA_PRODUK = :NAMA_PRODUK, 
     IS_ONBALANCESHEETMODE = :IS_ONBALANCESHEETMODE, 
@@ -5077,10 +5267,10 @@ SET
 WHERE KODE_PRODUK = :KODE_PRODUK
 
 -- name: DelTieringItem-main
-DELETE FROM %s.TIERINGITEM t WHERE t.ITEMID = :itemid
+DELETE FROM %[1]s.TIERINGITEM t WHERE t.ITEMID = :itemid
 
 -- name: DelLimitProd-main
-DELETE FROM %s.KETENTUAN k WHERE k.ID_KETENTUAN = :id_ketentuan
+DELETE FROM %[1]s.KETENTUAN k WHERE k.ID_KETENTUAN = :id_ketentuan
 
 -- name: GetProfitaccrualList-main
 select id_accrual, nomor_rekening, to_char(tanggal, 'YYYY-MM-DD') as tanggal, round(saldo, 2) as saldo, round(amount, 2) as amount,
@@ -5256,17 +5446,17 @@ values
 
 -- name: GetRegisterLayanan-main
 select id_register, nomor_rekening_layanan, status_register_layanan, jenis_register_layanan 
-from %s.registerlayanan
+from %[1]s.registerlayanan
 where id_register = :id_register
 
 -- name: UpdateRegisterLayanan-main
-update %s.registerlayanan
+update %[1]s.registerlayanan
 set status_register_layanan = :STATUS_REGISTER_LAYANAN, tanggal_nonaktif = current_timestamp, user_otorisasi_nonaktif = :USER_OTORISASI_NONAKTIF, 
     user_input_nonaktif = :USER_INPUT_NONAKTIF, kode_cabang_nonaktif = :KODE_CABANG_NONAKTIF
 where id_register = :ID_REGISTER
 
 -- name: NonActiveRegisterLayanan-main
-update %s.registerlayanan
+update %[1]s.registerlayanan
 set status_register_layanan = :STATUS_REGISTER_LAYANAN, tanggal_nonaktif = current_timestamp, user_otorisasi_nonaktif = :USER_OTORISASI_NONAKTIF, 
     user_input_nonaktif = :USER_INPUT_NONAKTIF, kode_cabang_nonaktif = :KODE_CABANG_NONAKTIF
 where id_register = :ID_REGISTER
@@ -5279,7 +5469,7 @@ values
 
 -- name: GetRegisterRt-main
 select recid, id_register, description, nomor_rekening_kredit
-from %s.registerrt
+from %[1]s.registerrt
 where id_register = :id_register
 
 -- name: GetListProdSav-main
@@ -5297,9 +5487,9 @@ select p.kode_produk, p.nama_produk, p.is_onbalancesheetmode, p.saldo_minimum_ti
     p.is_tutup_otomatis_dormant, p.biaya_adm_atm, p.biaya_kartu_atm, p.ekuivalen_rate, p.saldo_minimum_bagihasil, p.is_proses_cadangan, 
     p.persentase_cadangan, p.order_mb, p.is_biaya_materai, p.is_override_biayaatm, p.id_rencanabagihasildefault, p.id_biayalayananumum, 
     p.id_tiering_biayaadm, p.id_tiering_nisbahbonus, p.id_asuransi, pc.kode_cabang
-from %s.coreproduct c
-    inner join %s.produk p on p.kode_produk = c.productcode
-    inner join %s.produkcabang pc on pc.kode_produk = p.kode_produk
+from %[1]s.coreproduct c
+    inner join %[1]s.produk p on p.kode_produk = c.productcode
+    inner join %[1]s.produkcabang pc on pc.kode_produk = p.kode_produk
 where c.status = 'A' and p.jenis_produk='T' and pc.kode_cabang = :kode_cabang
 order by p.kode_produk
 
@@ -5337,9 +5527,9 @@ select p.kode_produk,
     p.is_biaya_atm,
     p.jenis_produk,
     pc.kode_cabang
-from %s.coreproduct c
-    inner join %s.produk p on p.kode_produk = c.productcode
-    inner join %s.produkcabang pc on pc.kode_produk = p.kode_produk
+from %[1]s.coreproduct c
+    inner join %[1]s.produk p on p.kode_produk = c.productcode
+    inner join %[1]s.produkcabang pc on pc.kode_produk = p.kode_produk
 where c.status = 'A' and p.jenis_produk='T' and pc.kode_cabang = :kode_cabang
 order by p.kode_produk
 
@@ -5419,6 +5609,9 @@ WHERE rl.nomor_rekening = rt.nomor_rekening
     AND rt.status_rekening <> '3'  
     AND %[2]s
 
+-- name: GetRekeningTabCollateral-filter-D
+(rl.nomor_rekening LIKE :nomor_rekening1 or upper(rt.nama_rekening) LIKE :nomor_rekening2)
+
 -- name: GetRekeningTabCollateral-main-GTJ
 SELECT
     l.nomor_rekening, rt.nama_rekening,        
@@ -5430,13 +5623,16 @@ WHERE
     AND rt.status_rekening=1
     AND %[2]s
 
+-- name: GetRekeningTabCollateral-filter-GTJ
+(upper(l.nomor_rekening) LIKE :nomor_rekening1 or upper(rt.nama_rekening) LIKE :nomor_rekening2)
+
 -- name: GetRekeningCustomer-main
 select nomor_rekening, jenis_rekening_customer, nomor_nasabah
 from %[1]s.rekeningcustomer
 where nomor_rekening = :nomor_rekening
 
 -- name: CreateRekenigCustomer-main
-insert into %s.rekeningcustomer
+insert into %[1]s.rekeningcustomer
 (nomor_rekening, nomor_nasabah, jenis_rekening_customer, tgl_akad)
 values
 (:NOMOR_REKENING, :NOMOR_NASABAH, :JENIS_REKENING_CUSTOMER, :TGL_AKAD)
@@ -5444,7 +5640,7 @@ values
 -- name: GetRekeningGenerator-main
 select 
 counter
-from %s.rekeninggenerator
+from %[1]s.rekeninggenerator
 where grup = :grup and kode_generator = :kode_generator
 
 -- name: InsertRekeningGenerator-main
@@ -5465,7 +5661,7 @@ from %[1]s.rekeningtransaksi rt
 where rt.nomor_rekening = :nomor_rekening
 
 -- name: CreateRekenigLiabilitas-main
-insert into %s.rekeningliabilitas(
+insert into %[1]s.rekeningliabilitas(
     nama_singkat, alamat_kirim, is_bagi_hasil_khusus, is_biaya_atm, is_biaya_rekening_dormant, is_biaya_saldo_minimum, is_blokir_debet, is_blokir_kredit, 
     is_blokir, is_boleh_debet, is_boleh_kredit, is_cetak_nota, is_dapat_bagi_hasil, is_join_account, is_kena_biayalayananumum, is_kena_pajak, 
     is_kena_zakat_bagi_hasil, is_rekening_baru, is_sedang_ditutup, is_status_passbook, is_tidak_dormant, is_tiering_nisbahbonus, 
@@ -5489,7 +5685,7 @@ values (
 )
 
 -- name: UpdateRekenigLiabilitas-main
-update %s.rekeningliabilitas
+update %[1]s.rekeningliabilitas
 set nisbah_spesial = round(:NISBAH_SPESIAL, 2), kode_program = :KODE_PROGRAM, is_boleh_debet = :IS_BOLEH_DEBET, is_kena_pajak = :IS_KENA_PAJAK, 
     kode_sumber_dana = :KODE_SUMBER_DANA, is_boleh_kredit = :IS_BOLEH_KREDIT, is_biaya_atm = :IS_BIAYA_ATM, is_blokir_debet = :IS_BLOKIR_DEBET, 
     is_kena_biayalayananumum = :IS_KENA_BIAYALAYANANUMUM, alamat_kirim = :ALAMAT_KIRIM, nisbah_dasar = round(:NISBAH_DASAR, 2), 
@@ -5593,17 +5789,17 @@ SET IS_BLOKIR = 'T',
 WHERE NOMOR_REKENING = :nomor_rekening
 
 -- name: UpdateSaldoDitahanLiabiliitas-main
-UPDATE %s.rekeningliabilitas
+UPDATE %[1]s.rekeningliabilitas
 SET SALDO_DITAHAN = SALDO_DITAHAN + :SALDO
 WHERE NOMOR_REKENING = :NOMOR_REKENING
 
 -- name: UpdateSaldoUnholdLiabitas-main
-UPDATE %s.rekeningliabilitas
+UPDATE %[1]s.rekeningliabilitas
 SET SALDO_DITAHAN = SALDO_DITAHAN - :SALDO
 WHERE NOMOR_REKENING = :NOMOR_REKENING
 
 -- name: UnblokirRekLiabilitasFinFund-main
-UPDATE %s.rekeningliabilitas
+UPDATE %[1]s.rekeningliabilitas
 SET IS_BLOKIR = 'F',
 SISTEM_PEMBLOKIR = NULL
 WHERE NOMOR_REKENING = :nomor_rekening
@@ -5624,7 +5820,7 @@ values
     ,:TANGGAL_JATUH_TEMPO ,:ID_REGISTER ,:SUDAH_SETORAN_AWAL)
 
 -- name: UpdateRekenigRencana-main
-update %s.rekeningrencana 
+update %[1]s.rekeningrencana 
 set tanggal_setoran_rutin = :TANGGAL_SETORAN_RUTIN, setoran_rutin = :SETORAN_RUTIN, nomor_rekening_pencairan = :NOMOR_REKENING_PENCAIRAN, 
     nomor_rekening_induk = :NOMOR_REKENING_INDUK
 where nomor_rekening = :NOMOR_REKENING
@@ -5638,17 +5834,17 @@ from %[1]s.registerrt rrt
 where rrt.nomor_rekening_kredit = :nomor_rekening
 
 -- name: UpdateSIRencana-main
-update %s.standinginstruction 
+update %[1]s.standinginstruction 
 set debitaccountno = :DEBITACCOUNTNO, debitaccountname = :DEBITACCOUNTNAME, amount = :AMOUNT
 where instructionid = :INSTRUCTIONID
 
 -- name: UpdateRCTRencana-main
-update %s.recurrenttransaction 
+update %[1]s.recurrenttransaction 
 set nominal = :NOMINAL, tgl_proses = :TGL_PROSES, tgl_kadaluarsa = :TGL_KADALUARSA
 where instructionid = :INSTRUCTIONID
 
 -- name: UpdateRLRencana-main
-update %s.registerlayanan 
+update %[1]s.registerlayanan 
 set nomor_rekening_layanan = :NOMOR_REKENING_LAYANAN
 where id_register = :ID_REGISTER
 
@@ -5658,7 +5854,7 @@ from %[1]s.rekeningtransaksi rt
 where rt.nomor_rekening = :nomor_rekening
 
 -- name: CreateRekenigTransaksi-main
-insert into %s.rekeningtransaksi 
+insert into %[1]s.rekeningtransaksi 
 (nama_rekening, keterangan, kode_valuta, nama_valuta, nomor_rekening, kode_cabang, saldo, saldo_pod, jenis_rekening_transaksi, 
     status_rekening, tanggal_aktifitas_terakhir, balance_sign, user_input, kode_jenis, tanggal_input, tanggal_otorisasi) 
 values 
@@ -5666,7 +5862,7 @@ values
     :STATUS_REKENING, :TANGGAL_AKTIFITAS_TERAKHIR,:BALANCE_SIGN, :USER_INPUT, :KODE_JENIS, current_timestamp, current_timestamp)
 
 -- name: UpdateRekeningTransaksi-main
-update %s.rekeningtransaksi 
+update %[1]s.rekeningtransaksi 
 set nama_rekening = :NAMA_REKENING, keterangan = :KETERANGAN, 
     tanggal_perbarui = current_timestamp, tanggal_update = :TANGGAL_UPDATE, 
     user_perbarui = :USER_PERBARUI 
@@ -5906,6 +6102,9 @@ from %[1]s.report
 where is_show_bds = 'T'
 %[2]s
 order by kode_report
+
+-- name: GetReportCodeList-filter-Keyword
+and lower(nama_report) like lower(:keyword1) or lower(kode_report) like lower(:keyword2)
 
 -- name: GetDataReportNasabah-main
 select n.nomor_nasabah, 
@@ -6499,6 +6698,12 @@ order by
     RT.Kode_Cabang,
     P.Kode_Produk,
     P.Nama_Produk
+
+-- name: GetDataReportRekeningSaldoRekap-filter-TanggalAkhirDefault
+nvl(RT.saldo, 0.0)
+
+-- name: GetDataReportRekeningSaldoRekap-filter-TanggalAkhirBeforeNow
+nvl(DB.BALANCE, 0.0)
 
 -- name: GetDataReportRekeningTidakAktif-main
 select

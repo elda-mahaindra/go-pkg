@@ -2,6 +2,9 @@ package registration
 
 var QUERY_NAMES_FUNDPARAM = []string{
 	QUERY__GetKodeBankTrfList_main,
+	QUERY__GetKodeBankTrfList_filter_Default,
+	QUERY__GetKodeBankTrfList_filter_JenisMemberSKN,
+	QUERY__GetKodeBankTrfList_filter_JenisMemberRTGS,
 	QUERY__GetKliringKotaList_main,
 	QUERY__GetKliringKotaSknList_main,
 	QUERY__SelectRtgsMsgCodeList_main,
@@ -10,6 +13,10 @@ var QUERY_NAMES_FUNDPARAM = []string{
 	QUERY__GetCabangDetail_main,
 	QUERY__GetLbvData_main,
 	QUERY__GetListAccountOfficer_main,
+	QUERY__GetListAccountOfficer_filter_Default,
+	QUERY__GetListAccountOfficer_filter_AgentCode,
+	QUERY__GetListAccountOfficer_filter_AgentName,
+	QUERY__GetListAccountOfficer_filter_StatusActive,
 	QUERY__GetInfoUid_main,
 	QUERY__InsertInfoUid_main,
 	QUERY__GetListParameterBiaya_main,
